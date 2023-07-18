@@ -58,11 +58,30 @@ function getToken() {
     console.log(`headerCookie = ${responseObj.headerCookie}`);
     console.log(`phpSid = ${responseObj.phpSid}`);
 
-    return {
-      "token": token,
-      "headerCookie": responseObj.headerCookie,
-      "phpSid": responseObj.phpSid
+
+    // get detail list
+    const url = `https://rent.591.com.tw/home/search/rsList?is_format_data=1&is_new_list=1&type=1&kind=2&multiPrice=5000_10000&order=posttime&orderType=desc`
+    const headerObj = {
+      "X-CSRF-TOKEN": token,
+      "Cookie": responseObj.headerCookie,
     }
+    return fetch(url, { ...headerObj, ...userAgentObj })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(json){
+        console.log("getDetailList()完成");
+        const resultList = json.data.data.map((obj)=>{ return obj.post_id; });
+        return {
+          "resultList": resultList
+        }
+      })
+
+    // return {
+    //   "token": token,
+    //   "headerCookie": responseObj.headerCookie,
+    //   "phpSid": responseObj.phpSid
+    // }
   })
 }
 
@@ -106,9 +125,14 @@ function handleEvent(event) {
   if (userText == "go") {
     getToken()
       .then(apiResponse => {
+        let listMessage = "";
+        apiResponse.forEach((postId)=>{
+          const url = `https://rent.591.com.tw/home/${postId}`
+          listMessage = listMessage + url + "\n"
+        })
         const replyMessage = {
           type: 'text',
-          text: `API response: ${JSON.stringify(apiResponse)}`,
+          text: `地點：台北\n類型：獨立套房\n價格區間：5000-10000\n前30筆資料如下\n\n${listMessage}`,
         };
 
         return client.replyMessage(event.replyToken, replyMessage);
