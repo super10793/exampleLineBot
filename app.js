@@ -36,7 +36,7 @@ function handleEvent(event) {
   }
 
   // create a echoing text message
-  const echo = { type: 'text', text: event.message.text };
+  const echo = { type: 'text', text: `Yo bro, 你剛剛說：${event.message.text}` };
 
   // use reply API
   return client.replyMessage(event.replyToken, echo);
