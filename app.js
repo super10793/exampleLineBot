@@ -124,7 +124,7 @@ function handleEvent(event) {
     getToken()
       .then(apiResponse => {
         let listMessage = "";
-        apiResponse.forEach((postId)=>{
+        apiResponse.resultList.forEach((postId)=>{
           const url = `https://rent.591.com.tw/home/${postId}`
           listMessage = listMessage + url + "\n"
         })
