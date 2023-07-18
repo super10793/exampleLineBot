@@ -47,9 +47,12 @@ function getToken() {
   })
   .then(function(responseObj) {
     // 取token
+    let token = ""
     const regex = /<meta name="csrf-token" content="([^"]*)">/;
     const match = regex.exec(responseObj.responseText);
-    const token = match[1];
+    if (match) {
+      token = match[1];
+    }
     console.log("getToken()完成");
     console.log(`token = ${token}`);
     console.log(`headerCookie = ${responseObj.headerCookie}`);
