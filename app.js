@@ -9,9 +9,6 @@ const userAgentObj = {
 }
 
 function getToken() {
-  let token = ""
-  let cookie = ""
-  let phpSessidString = ""
   console.log("getToken()開始.....");
   // 591首頁
   const url = "https://rent.591.com.tw/"
@@ -21,56 +18,47 @@ function getToken() {
     "json": true
   })
   .then(function(response) {
-    let setCookie = response.headers.get('set-cookie');
+    const setCookie = response.headers.get('set-cookie');
 
     // =================================================
     // 從cookie中取得`591_new_session`這個值，後續要用到
-    let newSessionStr = setCookie.split("; ").filter((str)=>{
+    const newSession = setCookie.split("; ").filter((str)=>{
         return (str.indexOf("591_new_session") != -1)
     })[0];
 
-    // newSessionStr
-    // domain=.591.com.tw, 591_new_session=xxx
-    cookie = newSessionStr.split(", ")[1]
+    // newSession -> `domain=.591.com.tw, 591_new_session=xxx`
+    const cookie = newSession.split(", ")[1]
     // =================================================
-
-
-
     // =================================================
     // 從cookie中取得`PHPSESSID`這個值，後續要用到
-    let phpSessidStr = setCookie.split("; ").filter((str)=>{
+    const phpSessid = setCookie.split("; ").filter((str)=>{
         return (str.indexOf("PHPSESSID") != -1)
     })[0];
 
-    // phpSessidStr
-    // Path=/, PHPSESSID=3vkgnn6g36tneok220vbb046pj
-    phpSessidString = phpSessidStr.split(", ")[1].split("=")[1]
+    // phpSessid -> `Path=/, PHPSESSID=3vkgnn6g36tneok220vbb046pj`
+    const phpSid = phpSessid.split(", ")[1].split("=")[1]
     // =================================================
 
-    return response.text();
-  })
-  .then(function(text) {
-    // 取token
-    let regex = /<meta name="csrf-token" content="([^"]*)">/;
-    let match = regex.exec(text);
-    if (match && cookie != "" && phpSessidString != "") {
-      console.log("getToken()完成");
-      token = match[1];
-      console.log(`token = ${token}`);
-      console.log(`cookie = ${cookie}`);
-      console.log(`phpSessidString = ${phpSessidString}`);
-      // getDetailList()
-    } else {
-      console.log("getToken()完成，但有些值無法取得");
-      console.log(`token = ${token}`);
-      console.log(`cookie = ${cookie}`);
-      console.log(`phpSessidString = ${phpSessidString}`);
+    return {
+      "responseText": response.text(),
+      "headerCookie": cookie,
+      "phpSid": phpSid
     }
+  })
+  .then(function(responseObj) {
+    // 取token
+    const regex = /<meta name="csrf-token" content="([^"]*)">/;
+    const match = regex.exec(responseObj.responseText);
+    const token = match[1];
+    console.log("getToken()完成");
+    console.log(`token = ${token}`);
+    console.log(`headerCookie = ${responseObj.headerCookie}`);
+    console.log(`phpSid = ${responseObj.phpSid}`);
 
     return {
       "token": token,
-      "cookie": cookie,
-      "phpSessidString": phpSessidString
+      "headerCookie": responseObj.headerCookie,
+      "phpSid": responseObj.phpSid
     }
   })
 }
