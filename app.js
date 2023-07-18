@@ -12,6 +12,8 @@ function getToken() {
   console.log("getToken()開始.....");
   // 591首頁
   const url = "https://rent.591.com.tw/"
+  let headerCookie = ""
+  let phpSid = ""
   return fetch(url, {
     "credentials": "include", // 使用cookie
     "headers": userAgentObj,
@@ -27,7 +29,7 @@ function getToken() {
     })[0];
 
     // newSession -> `domain=.591.com.tw, 591_new_session=xxx`
-    const cookie = newSession.split(", ")[1]
+    headerCookie = newSession.split(", ")[1]
     // =================================================
     // =================================================
     // 從cookie中取得`PHPSESSID`這個值，後續要用到
@@ -36,36 +38,32 @@ function getToken() {
     })[0];
 
     // phpSessid -> `Path=/, PHPSESSID=3vkgnn6g36tneok220vbb046pj`
-    const phpSid = phpSessid.split(", ")[1].split("=")[1]
+    phpSid = phpSessid.split(", ")[1].split("=")[1]
     // =================================================
 
-    return {
-      "responseText": response.text(),
-      "headerCookie": cookie,
-      "phpSid": phpSid
-    }
+    return response.text();
   })
-  .then(function(responseObj) {
+  .then(function(text) {
     // 取token
     let token = ""
     const regex = /<meta name="csrf-token" content="([^"]*)">/;
-    const match = regex.exec(responseObj.responseText);
+    const match = regex.exec(text);
     if (match) {
       token = match[1];
     }
     console.log("getToken()完成");
     console.log(`token = ${token}`);
-    console.log(`headerCookie = ${responseObj.headerCookie}`);
-    console.log(`phpSid = ${responseObj.phpSid}`);
+    console.log(`headerCookie = ${headerCookie}`);
+    console.log(`phpSid = ${phpSid}`);
 
 
     // get detail list
     const url = `https://rent.591.com.tw/home/search/rsList?is_format_data=1&is_new_list=1&type=1&kind=2&multiPrice=5000_10000&order=posttime&orderType=desc`
     const headerObj = {
       "X-CSRF-TOKEN": token,
-      "Cookie": responseObj.headerCookie,
+      "Cookie": headerCookie,
     }
-    return fetch(url, { ...headerObj, ...userAgentObj })
+    return fetch(url, { "headers": { ...headerObj, ...userAgentObj }})
       .then(function(response) {
         return response.json();
       })
